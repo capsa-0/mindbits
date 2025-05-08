@@ -1,0 +1,81 @@
+[NEAT]
+fitness_criterion = max
+fitness_threshold = 0.95
+pop_size = 30
+reset_on_extinction = False
+
+[DefaultGenome]
+# Parámetros de compatibilidad
+compatibility_disjoint_coefficient = 1.0
+compatibility_excess_coefficient = 1.0
+compatibility_weight_coefficient = 0.5
+
+# Configuración de nodos
+num_inputs = 144
+num_outputs = 9
+num_hidden = 0
+initial_connection = unconnected
+feed_forward = False
+enabled_default = True
+node_bias_mutate_rate = 0.2
+node_bias_mutate_power = 0.5
+node_bias_replace_rate = 0.1
+node_response_mutate_rate = 0.7
+node_response_mutate_power = 0.0
+node_response_replace_rate = 0.0
+
+# Activación neuronal
+activation_default = relu
+activation_options = relu
+activation_mutate_rate = 0.5
+
+# Configuración de bias
+bias_init_mean = 0.0
+bias_init_stdev = 1.0
+bias_max_value = 30.0
+bias_min_value = -30.0
+bias_mutate_rate = 0.7
+bias_replace_rate = 0.1
+bias_mutate_power = 0.5
+
+# Configuración de respuesta
+response_init_mean = 1.0
+response_init_stdev = 0.0
+response_max_value = 30.0
+response_min_value = -30.0
+response_mutate_rate = 0.7
+response_mutate_power = 0.0
+response_replace_rate = 0.0
+
+# Configuración de pesos
+weight_init_mean = 0.0
+weight_init_stdev = 1.0
+weight_max_value = 30.0
+weight_min_value = -30.0
+weight_mutate_rate = 0.7
+weight_replace_rate = 0.1
+weight_mutate_power = 0.5
+
+aggregation_default = sum
+aggregation_options = sum
+aggregation_mutate_rate = 0.0
+
+
+# Mutaciones estructurales
+conn_add_prob = 0.3
+conn_delete_prob = 0.1
+node_add_prob = 0.2
+node_delete_prob = 0.1
+enabled_mutate_rate = 0.01
+
+[DefaultSpeciesSet]
+compatibility_threshold = 3.0
+
+[DefaultStagnation]
+species_fitness_func = mean
+max_stagnation = 6
+species_elitism = 2
+
+[DefaultReproduction]
+elitism = 3
+survival_threshold = 0.2
