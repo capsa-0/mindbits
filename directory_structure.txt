@@ -1,0 +1,24 @@
+project_root/
+│── main.py                # Punto de entrada
+│── config.py              # Configuración global (constantes)
+│
+├── core/                  # Lógica central de la simulación
+│   ├── simulation.py      # Clase Simulation (bucle principal)
+│   ├── agent.py           # Clase Individual (comportamiento del agente)
+│   ├── population.py      # Manejo de poblaciones (reproducción, mutaciones, guardado)
+│   └── map_manager.py     # Clase MapManager (terreno, comida, padding)
+│
+├── graphics/              # Todo lo relacionado con pygame y renderizado
+│   ├── display.py         # Bordes, interfaz de usuario
+│   ├── camera.py          # Cámara
+│   └── render.py          # Render de agentes, terreno y overlays
+│
+├── models/                # Redes neuronales y arquitecturas
+│   └── networks.py        # VisionOnlyNN y otras NN
+│
+├── utils/                 # Herramientas auxiliares
+│   ├── io.py              # Guardado/carga de poblaciones, datos, gráficas
+│   └── metrics.py         # Cálculo de fitness, estadísticas, gráficas
+│
+├── out/                   # Carpeta de salida (imágenes, logs, poblaciones guardadas)
+└── requirements.txt       # Dependencias del proyecto

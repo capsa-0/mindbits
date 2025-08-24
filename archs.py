@@ -1,395 +1,273 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from Config import Config
-
-
-def to_one_hot(input, encoding_size):
-    # Versión pre-asignada de memoria (óptima para visiones grandes)
-
-    result = [0] * (len(input) * encoding_size)
-    
-    for i, cell in enumerate(input):
-        if 0 <= cell < encoding_size:
-            result[i * encoding_size + int(cell)] = 1
-    return result
-
-
-
-class FeedForward(nn.Module):
-    def __init__(self, input_size, architecture, ws=None, bs=None):
-        super(FeedForward, self).__init__()
-        self.layers = nn.ModuleList()
-        prev_size = input_size
-        # Construir capas
-        for layer_size in architecture + [9]:
-            layer = nn.Linear(prev_size, layer_size)
-            
-            # Inicialización de He (Kaiming) para pesos
-            nn.init.kaiming_normal_(layer.weight, 
-                                    mode='fan_in',  # Opciones: 'fan_in', 'fan_out'
-                                    nonlinearity='relu')  # Ajustar según tu función de activación
-            
-            # Inicializar sesgos a cero (opcional, pero común)
-            nn.init.zeros_(layer.bias)
-            
-            self.layers.append(layer)
-            prev_size = layer_size
-
-            # Cargar pesos si se proporcionan
-            if ws is not None and bs is not None:
-                self.load_weights(ws, bs)
-
-    def load_weights(self, ws, bs):
-        """Carga pesos desde NumPy arrays, ajustando dimensiones para PyTorch."""
-        with torch.no_grad():
-            for i, layer in enumerate(self.layers):
-                # PyTorch espera pesos de shape (out_features, in_features)
-                layer.weight.data = torch.tensor(ws[i].T, dtype=torch.float32)
-                layer.bias.data = torch.tensor(bs[i], dtype=torch.float32)
-
-    def mutate(
-        self,
-        mutation_rate=Config.MUTATION_RATE,
-        mutation_scale=Config.MUTATION_SCALE,
-        zero_rate=Config.DROP_RATE 
-    ):
-
-        with torch.no_grad():
-            for layer in self.layers:
-                # Mutar pesos
-                mask = (torch.rand_like(layer.weight) < mutation_rate).float()
-                noise = torch.randn_like(layer.weight) * mutation_scale
-                layer.weight += mask * noise
-
-                # Anular pesos a cero
-                zero_mask = (torch.rand_like(layer.weight) < zero_rate)
-                layer.weight[zero_mask] = 0.0
-
-                # Mutar biases
-                mask = (torch.rand_like(layer.bias) < mutation_rate).float()
-                noise = torch.randn_like(layer.bias) * mutation_scale
-                layer.bias += mask * noise
-
-                # Anular biases a cero
-                zero_mask = (torch.rand_like(layer.bias) < zero_rate)
-                layer.bias[zero_mask] = 0.0
-
-
-
-    def forward(self, input):
-
-        if Config.ENCODING == 'one_hot':
-            input = input
-
-        #elif Config.ENCODING == 'dense': 
-         #   input = list(x_env.flatten()) + list(x_memory)# + [energy/100]
-        
-        x = torch.as_tensor(input, dtype=torch.float32).view(1, -1)  # Forma (1, 1)
-        # Forward a través de las capas
-        for layer in self.layers[:-1]:
-            x = F.relu(layer(x))
-        
-        output = self.layers[-1](x)
-
-        return np.argmax(output.detach().numpy())
-
-
-
-import math
 import random
-from collections import deque
-import numpy as np
-import matplotlib.pyplot as plt
-import networkx as nx
+from config_loader import Config
 
-class NeuralNetworkNEAT:
-    def __init__(self, input_size = Config.INPUT_SIZE, arch = None):
-        self.input_size = input_size
-        self.output_size = 9
-        self.nodes = (
-            [{"id": i, "type": "input"} for i in range(input_size)]
-            + [{"id": input_size + j, "type": "output"} for j in range(self.output_size)]
+class VisionOnlyNN(nn.Module):
+    def __init__(self, vision_radius=Config.VISION_RADIUS):
+        super().__init__()
+        self.vision_size = 2 * vision_radius + 1
+        
+        # Capa convolucional para 2 canales (terreno y población)
+        self.conv = nn.Conv2d(2, 16, kernel_size=3, padding=1)  # 2 canales de entrada, 16 filtros
+        
+        # GRU para memoria temporal
+        rnn_input_size = 16 * self.vision_size**2  # 16 canales * tamaño de visión
+        self.rnn = nn.GRU(rnn_input_size, 32, batch_first=True)
+        
+        # Capa de decisión
+        self.decoder = nn.Linear(32, 9)  # 9 movimientos posibles
+        
+        # Estado oculto persistente
+        self.hidden_state = None
+
+    def forward(self, terrain_vision, population_vision):
+        # Convertir inputs NumPy a tensores PyTorch
+        terrain_tensor = torch.from_numpy(terrain_vision).float().unsqueeze(0)  # (1, H, W)
+        population_tensor = torch.from_numpy(population_vision).float().unsqueeze(0)  # (1, H, W)
+        
+        # Combinar en un tensor de 2 canales
+        combined = torch.stack([terrain_tensor, population_tensor], dim=1)  # (1, 2, H, W)
+        
+        # Aplicar convolución
+        conv_out = self.conv(combined)  # (1, 16, H, W)
+        
+        # Aplanar manteniendo la dimensión batch
+        conv_flat = conv_out.view(1, 1, -1)  # (1, 1, 16*H*W)
+        
+        # Procesar con GRU
+        if self.hidden_state is None:
+            rnn_out, self.hidden_state = self.rnn(conv_flat)
+        else:
+            rnn_out, self.hidden_state = self.rnn(conv_flat, self.hidden_state)
+        
+        # Decodificar movimiento
+        move_logits = self.decoder(rnn_out.squeeze(1))  # (1, 9)
+        return move_logits
+
+    def clean_memory(self):
+        self.hidden_state = None
+
+    def mutate(self, mutation_rate=Config.MUTATION_RATE, mutation_std=Config.MUTATION_STD, mutation_clip=Config.MUTATION_CLIP):
+
+        for param in self.parameters():
+            if random.random() < mutation_rate:
+                noise = torch.randn_like(param) * mutation_std
+                param.data.add_(noise)
+                if hasattr(Config, "MUTATION_CLIP"):
+                    param.data.clamp_(-mutation_clip, mutation_clip)
+                    
+import torch.nn.init as init
+
+class SimpleRNN(nn.Module):
+
+    def __init__(self, input_size=None, hidden_size=Config.MEMORY_SIZE, output_size=5, vision_radius=Config.VISION_RADIUS):
+        super().__init__()
+        self.vision_size = 2 * vision_radius + 1
+
+        if input_size is None:
+            input_size = 2 * (self.vision_size ** 2)
+
+        self.hidden_size = hidden_size
+
+        # --- Encoder con dos capas lineales ---
+        self.encoder = nn.Sequential(
+            nn.Linear(input_size, 50),
+            nn.ReLU(),
+            nn.Linear(50, 30),
+            nn.ReLU()
         )
-        self.connections = []
-        self.innovation_counter = 0
-        self.node_counter = input_size + self.output_size
-        self.topological_order = []
 
-        # ==== Conexiones iniciales (10 aleatorias entrada->salida) ====
-        input_nodes = range(self.input_size)
-        output_nodes = range(self.input_size, self.input_size + self.output_size)
-        
-        # Generar todas combinaciones posibles de conexiones entrada-salida
-        all_possible_connections = [
-            (in_node, out_node)
-            for in_node in input_nodes
-            for out_node in output_nodes
-        ]
-        
-        # Seleccionar 10 conexiones únicas (sin repetición)
-        random.shuffle(all_possible_connections)
-        selected_connections = all_possible_connections[:10]  # Toma las primeras 10
-        
-        for in_node, out_node in selected_connections:
-            self.connections.append({
-                "in_node": in_node,
-                "out_node": out_node,
-                "weight": random.uniform(-1, 1),
-                "enabled": True,
-                "innovation": self.innovation_counter
-            })
-            self.innovation_counter += 1
+        # Inicialización He en encoder
+        init.kaiming_normal_(self.encoder[0].weight, nonlinearity="relu")
+        nn.init.zeros_(self.encoder[0].bias)
+        init.kaiming_normal_(self.encoder[2].weight, nonlinearity="relu")
+        nn.init.zeros_(self.encoder[2].bias)
 
-        # Probabilidades de mutación (ajustables)
-        self.p_add_conn = 0.3
-        self.p_add_node = 0.1
-        self.p_adjust_weight = 0.7
-        self.p_toggle_enabled = 0.1
-        self.p_remove_conn = 0.05
-        self.weight_perturb_prob = 0.9  # Probabilidad de perturbar vs reemplazar peso
+        # RNN simple
+        self.rnn = nn.RNN(30, hidden_size, batch_first=True)
 
-        self.update_topological_order()
-        self.plot_network()
-    
+        # Inicialización He en RNN
+        for name, param in self.rnn.named_parameters():
+            if "weight" in name:
+                init.kaiming_normal_(param, nonlinearity="relu")
+            elif "bias" in name:
+                nn.init.zeros_(param)
 
-    def forward(self, x_env, x_memory, energy):
-        inputs = x_env.flatten().tolist() + list(x_memory) + [energy / 100]
+        # Capa de salida (movimientos)
+        self.decoder = nn.Linear(hidden_size, output_size)
 
-        
-        activations = {node["id"]: 0.0 for node in self.nodes}
-        
-        # Asignar entradas
-        for i in range(self.input_size):
-            activations[i] = inputs[i]
-    
-        
-        # Procesar en orden topológico
+        # Inicialización He en decoder (sin activación → linear)
+        init.kaiming_normal_(self.decoder.weight, nonlinearity="linear")
+        nn.init.zeros_(self.decoder.bias)
 
-        for node_id in self.topological_order:
-            node = next(n for n in self.nodes if n["id"] == node_id)
-            if node["type"] == "input":
-                continue
-            
-            # Calcular suma ponderada
-            total = 0.0
+        # Estado oculto persistente
+        self.hidden_state = None
 
-            for conn in self.connections:
-                if conn["out_node"] == node_id and conn["enabled"]:
-                    total += activations[conn["in_node"]] * conn["weight"]
 
-            activations[node_id] = self.sigmoid(total)
 
-        
-        # Extraer salidas
-        output_ids = [n["id"] for n in self.nodes if n["type"] == "output"]
-        output = [activations[id] for id in output_ids]
-        action = np.argmax(output)
+    def forward(self, terrain_vision, population_vision):
+        # Convertir inputs NumPy a tensores PyTorch
+        terrain_tensor = torch.from_numpy(terrain_vision).float().view(1, -1)     # (1, H*W)
+        population_tensor = torch.from_numpy(population_vision).float().view(1, -1) # (1, H*W)
 
-        return action
+        # Concatenar terreno y población en un solo vector
+        combined = torch.cat([terrain_tensor, population_tensor], dim=1)  # (1, 2*H*W)
 
-    def mutate(self):
-        if random.random() < self.p_add_conn:
-            self._mutate_add_connection()
-        if random.random() < self.p_add_node:
-            self._mutate_add_node()
-        if random.random() < self.p_adjust_weight:
-            self._mutate_adjust_weights()
-        if random.random() < self.p_toggle_enabled:
-            self._mutate_toggle_connection()
-        if random.random() < self.p_remove_conn:
-            self._mutate_remove_connection()
-        self.update_topological_order()
+        # Pasar por el encoder
+        encoded = self.encoder(combined)  # (1, 64)
 
-    def _mutate_add_connection(self):
-        attempts = 100
-        for _ in range(attempts):
-            a = random.choice([n["id"] for n in self.nodes if n["type"] in ["input", "hidden"]])
-            b = random.choice([n["id"] for n in self.nodes if n["type"] in ["hidden", "output"]])
-            if a == b or not self._can_add_connection(a, b):
-                continue
-            self.connections.append({
-                "in_node": a,
-                "out_node": b,
-                "weight": random.uniform(-1, 1),
-                "enabled": True,
-                "innovation": self.innovation_counter
-            })
-            self.innovation_counter += 1
-            return
+        # Adaptar para RNN (batch=1, seq_len=1, input_size=64)
+        encoded_seq = encoded.unsqueeze(1)
 
-    def _can_add_connection(self, a, b):
-        # Verificar si existe conexión previa
-        for conn in self.connections:
-            if conn["in_node"] == a and conn["out_node"] == b:
-                return False
-        # Detección de ciclos (BFS)
-        visited = set()
-        queue = deque([b])
-        while queue:
-            current = queue.popleft()
-            if current == a:
-                return False  # Hay ciclo
-            visited.add(current)
-            for conn in self.connections:
-                if conn["out_node"] == current and conn["in_node"] not in visited:
-                    queue.append(conn["in_node"])
-        return True
+        # RNN
+        if self.hidden_state is None:
+            rnn_out, self.hidden_state = self.rnn(encoded_seq)
+        else:
+            rnn_out, self.hidden_state = self.rnn(encoded_seq, self.hidden_state)
 
-    def _mutate_add_node(self):
-        enabled_conns = [c for c in self.connections if c["enabled"]]
-        if not enabled_conns:
-            return
-        conn = random.choice(enabled_conns)
-        conn["enabled"] = False
-        new_node_id = self.node_counter
-        self.node_counter += 1
-        self.nodes.append({"id": new_node_id, "type": "hidden"})
-        # Añadir nuevas conexiones
-        self.connections.append({
-            "in_node": conn["in_node"],
-            "out_node": new_node_id,
-            "weight": 1.0,
-            "enabled": True,
-            "innovation": self.innovation_counter
-        })
-        self.innovation_counter += 1
-        self.connections.append({
-            "in_node": new_node_id,
-            "out_node": conn["out_node"],
-            "weight": conn["weight"],
-            "enabled": True,
-            "innovation": self.innovation_counter
-        })
-        self.innovation_counter += 1
+        # Decodificador final
+        move_logits = self.decoder(rnn_out.squeeze(1))  # (1, output_size)
+        return move_logits
 
-    def _mutate_adjust_weights(self):
-        for conn in self.connections:
-            if random.random() < 0.8:  # Probabilidad de ajustar este peso
-                if random.random() < self.weight_perturb_prob:
-                    conn["weight"] += random.uniform(-0.5, 0.5)
-                else:
-                    conn["weight"] = random.uniform(-1, 1)
-                conn["weight"] = max(min(conn["weight"], 1.0), -1.0)
 
-    def _mutate_toggle_connection(self):
-        if self.connections:
-            conn = random.choice(self.connections)
-            conn["enabled"] = not conn["enabled"]
+    def clean_memory(self):
+        self.hidden_state = None
 
-    def _mutate_remove_connection(self):
-        if self.connections:
-            conn = random.choice(self.connections)
-            self.connections.remove(conn)
 
-    def update_topological_order(self):
-        adj = {n["id"]: [] for n in self.nodes}
-        in_degree = {n["id"]: 0 for n in self.nodes}
-        for conn in self.connections:
-            if conn["enabled"]:
-                adj[conn["in_node"]].append(conn["out_node"])
-                in_degree[conn["out_node"]] += 1
-        queue = deque([node_id for node_id in in_degree if in_degree[node_id] == 0])
-        top_order = []
-        while queue:
-            node = queue.popleft()
-            top_order.append(node)
-            for neighbor in adj[node]:
-                in_degree[neighbor] -= 1
-                if in_degree[neighbor] == 0:
-                    queue.append(neighbor)
-        self.topological_order = top_order
+    def mutate(self, mutation_rate=Config.MUTATION_RATE, mutation_std=Config.MUTATION_STD, mutation_clip=Config.MUTATION_CLIP):
+        for param in self.parameters():
+            noise_mask = (torch.rand_like(param) < mutation_rate).float()
+            noise = torch.randn_like(param) * mutation_std
+            param.data.add_(noise * noise_mask)
+            param.data.clamp_(-mutation_clip, mutation_clip)
 
-    def sigmoid(self, x):
-        return 1 / (1 + math.exp(-x))
 
-    @property
-    def size(self):
-        return len(self.connections)
-    
-    def plot_network(self, show_weights=True, innovation_numbers=False):
-        plt.figure(figsize=(12, 8))
-        G = nx.DiGraph()
-        
-        # Agregar nodos con atributos
-        node_colors = []
-        for node in self.nodes:
-            G.add_node(node["id"])
-            if node["type"] == "input":
-                node_colors.append("lightgreen")
-            elif node["type"] == "output":
-                node_colors.append("salmon")
-            else:
-                node_colors.append("skyblue")
-        
-        # Agregar conexiones
-        edge_colors = []
-        edge_widths = []
-        labels = {}
-        for conn in self.connections:
-            if conn["enabled"]:
-                G.add_edge(conn["in_node"], conn["out_node"])
-                # Color por signo del peso
-                edge_colors.append("red" if conn["weight"] < 0 else "blue")
-                # Ancho proporcional al peso absoluto
-                edge_widths.append(abs(conn["weight"]) * 2 + 0.5)
-                
-                # Etiquetas
-                if innovation_numbers:
-                    labels[(conn["in_node"], conn["out_node"])] = f"{conn['innovation']}"
-                elif show_weights:
-                    labels[(conn["in_node"], conn["out_node"])] = f"{conn['weight']:.2f}"
 
-        # Posicionamiento en capas
-        pos = {}
-        input_nodes = [n["id"] for n in self.nodes if n["type"] == "input"]
-        hidden_nodes = [n["id"] for n in self.nodes if n["type"] == "hidden"]
-        output_nodes = [n["id"] for n in self.nodes if n["type"] == "output"]
-        
-        # Inputs a la izquierda
-        for i, node_id in enumerate(input_nodes):
-            pos[node_id] = (0, i/len(input_nodes))
-            
-        # Outputs a la derecha
-        for i, node_id in enumerate(output_nodes):
-            pos[node_id] = (2, i/len(output_nodes))
-            
-        # Hidden en el medio (organizados verticalmente)
-        for i, node_id in enumerate(hidden_nodes):
-            pos[node_id] = (1, (i+1)/(len(hidden_nodes)+1))
+class MLP(nn.Module):
+    def __init__(self, input_size=None, output_size=5, vision_radius=Config.VISION_RADIUS, architecture=[50, 25, 14]):
+        super().__init__()
+        self.vision_size = 2 * vision_radius + 1
 
-        # Dibujar
-        nx.draw(
-            G, pos,
-            node_color=node_colors,
-            node_size=800,
-            edge_color=edge_colors,
-            width=edge_widths,
-            arrows=True,
-            arrowstyle="-|>",
-            arrowsize=15,
-            with_labels=True,
-            font_weight='bold'
-        )
-        
-        # Dibujar etiquetas de conexiones
-        if labels:
-            nx.draw_networkx_edge_labels(
-                G, pos,
-                edge_labels=labels,
-                font_color='black',
-                label_pos=0.75
-            )
-            
-        # Leyenda
-        legend_elements = [
-            plt.Line2D([0], [0], marker='o', color='w', label='Input', markerfacecolor='lightgreen', markersize=10),
-            plt.Line2D([0], [0], marker='o', color='w', label='Hidden', markerfacecolor='skyblue', markersize=10),
-            plt.Line2D([0], [0], marker='o', color='w', label='Output', markerfacecolor='salmon', markersize=10),
-            plt.Line2D([0], [0], color='blue', lw=2, label='Peso positivo'),
-            plt.Line2D([0], [0], color='red', lw=2, label='Peso negativo')
-        ]
-        plt.legend(handles=legend_elements, loc='best')
-        
-        plt.title(f"Red NEAT (Tamaño: {self.size})")
-        plt.show()
+        # Entrada: terreno y población, dos canales de (H, W)
+        if input_size is None:
+            input_size = 2 * (self.vision_size ** 2)
+
+        if architecture is None:
+            architecture = Config.ARCHITECTURE  # lista de tamaños ocultos
+
+        layers = []
+        prev_size = input_size
+
+        # Crear capas ocultas dinámicamente
+        for hidden_size in architecture:
+            layers.append(nn.Linear(prev_size, hidden_size))
+            layers.append(nn.ReLU())
+            prev_size = hidden_size
+
+        # Capa final
+        layers.append(nn.Linear(prev_size, output_size))
+
+        self.network = nn.Sequential(*layers)
+
+
+    def forward(self, terrain_vision, population_vision):
+        # Convertir inputs NumPy a tensores PyTorch
+        terrain_tensor = torch.from_numpy(terrain_vision).float().view(1, -1)       # (1, H*W)
+        population_tensor = torch.from_numpy(population_vision).float().view(1, -1) # (1, H*W)
+
+        # Concatenar terreno y población
+        combined = torch.cat([terrain_tensor, population_tensor], dim=1)  # (1, 2*H*W)
+
+        # Pasar por la red
+        logits = self.network(combined)  # (1, output_size)
+        return logits
+
+
+    def mutate(self, mutation_rate=Config.MUTATION_RATE, mutation_std=Config.MUTATION_STD, mutation_clip=Config.MUTATION_CLIP):
+        for param in self.parameters():
+            noise_mask = (torch.rand_like(param) < mutation_rate).float()
+            noise = torch.randn_like(param) * mutation_std
+            param.data.add_(noise * noise_mask)
+            param.data.clamp_(-mutation_clip, mutation_clip)
+
+
+import torch.nn.functional as F
+
+class MLP_with_memory(nn.Module):
+    def __init__(self, input_size=None, output_size=5, vision_radius=Config.VISION_RADIUS,
+                 architecture=[60, 30, 15], memory_size=Config.MEMORY_SIZE):
+        super().__init__()
+        self.vision_size = 2 * vision_radius + 1
+        self.output_size = output_size
+        self.memory_size = memory_size
+
+        # Entrada: terreno + población (2 canales) + memoria
+        if input_size is None:
+            input_size = 2 * (self.vision_size ** 2)
+
+        memory_input_size = output_size * memory_size
+        input_size = input_size + memory_input_size
+
+        if architecture is None:
+            architecture = Config.ARCHITECTURE
+
+        layers = []
+        prev_size = input_size
+
+        for hidden_size in architecture:
+            layers.append(nn.Linear(prev_size, hidden_size))
+            layers.append(nn.ReLU())
+            prev_size = hidden_size
+
+        layers.append(nn.Linear(prev_size, output_size))
+        self.network = nn.Sequential(*layers)
+
+        # 🔹 Inicialización Kaiming (He) para todas las capas lineales
+        for m in self.network:
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, mode="fan_in", nonlinearity="relu")
+                nn.init.zeros_(m.bias)
+
+        # Inicializar memoria (tensor de ceros con tamaño [memory_size, output_size])
+        self.clean_memory()
+
+    def clean_memory(self):
+        """Resetea la memoria a ceros."""
+        self.memory = torch.zeros(self.memory_size, self.output_size)
+
+    def update_memory(self, logits):
+        """Actualiza la memoria con la acción tomada (argmax -> one hot)."""
+        action = torch.argmax(logits, dim=1)  # (1,)
+        one_hot = F.one_hot(action, num_classes=self.output_size).float()  # (1, output_size)
+
+        # Desplazar memoria hacia atrás e insertar nueva acción al frente
+        self.memory = torch.roll(self.memory, shifts=-1, dims=0)
+        self.memory[-1] = one_hot.squeeze(0)  # insertar última acción
+
+    def forward(self, terrain_vision, population_vision):
+        # Convertir entradas a tensores
+        terrain_tensor = torch.from_numpy(terrain_vision).float().view(1, -1)
+        population_tensor = torch.from_numpy(population_vision).float().view(1, -1)
+
+        # Aplanar memoria en un vector
+        memory_tensor = self.memory.flatten().unsqueeze(0)  # (1, memory_size*output_size)
+
+        # Concatenar entrada total
+        combined = torch.cat([terrain_tensor, population_tensor, memory_tensor], dim=1)
+
+        # Pasar por la red
+        logits = self.network(combined)  # (1, output_size)
+
+        # Actualizar memoria con la acción seleccionada
+        self.update_memory(logits)
+
+        return logits
+
+    def mutate(self, mutation_rate=Config.MUTATION_RATE, mutation_std=Config.MUTATION_STD,
+               mutation_clip=Config.MUTATION_CLIP):
+        for param in self.parameters():
+            noise_mask = (torch.rand_like(param) < mutation_rate).float()
+            noise = torch.randn_like(param) * mutation_std
+            param.data.add_(noise * noise_mask)
+            param.data.clamp_(-mutation_clip, mutation_clip)
