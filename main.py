@@ -30,6 +30,7 @@ def main():
                         pygame.quit()
                         return
 
+                display.handle_input()   
                 display.draw_frame(
                     simulation.terrain_map,
                     simulation.agents_population,

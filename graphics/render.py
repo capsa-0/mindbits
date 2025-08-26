@@ -130,7 +130,7 @@ class UIButton:
 
 
 class SimulationHUD:
-    def __init__(self, pos=(800, 43), size=(500, 400), font_name="consolas", font_size=16, padding=10, alpha=190):
+    def __init__(self, pos=(1100, 40), size=(500, 400), font_name="consolas", font_size=16, padding=10, alpha=190):
         self.x, self.y = pos
         self.w, self.h = size
         self.padding = padding

@@ -18,14 +18,15 @@ class Individual:
 
     def get_vision(self, terrain_map, population_map):
         r = Config.VISION_RADIUS
-        
-        x_start, x_end = max(0, self.x - r), min(terrain_map.shape[0], self.x + r + 1)
-        y_start, y_end = max(0, self.y - r), min(terrain_map.shape[1], self.y + r + 1)
-        
+
+        y_start, y_end = max(0, self.y - r), min(terrain_map.shape[0], self.y + r + 1)
+        x_start, x_end = max(0, self.x - r), min(terrain_map.shape[1], self.x + r + 1)
+
         terrain_vision = terrain_map[y_start:y_end, x_start:x_end]
         population_vision = population_map[y_start:y_end, x_start:x_end]
 
         return terrain_vision, population_vision
+
 
 
     def decide_movement(self, terrain_map,population_map):

@@ -128,12 +128,9 @@ class EggHuntTest:
         return fitness_list
     
     def get_fitness(self, agent):
-        from_start_distance = self.distance((agent.x, agent.y), self.start_position)
-        found_egg = 1 if self.distance((agent.x, agent.y), self.egg_position) == 0 else 0
 
-        fitness = ((from_start_distance/self.max_distance) * 0.5 + found_egg)*100 / 1.5
+        return -self.distance((agent.x, agent.y), self.egg_position)
 
-        return fitness
 
 
 #class EggHuntDisplay:
