@@ -1,72 +1,103 @@
-import json
-from dataclasses import dataclass
-from typing import Tuple, Union
+import yaml
+from dataclasses import dataclass, field
+from typing import Tuple, Union, List, Optional
 from screeninfo import get_monitors
 
 
 @dataclass
 class _Config:
+    # ==============================
+    # SIMULATION / ENVIRONMENT
+    # ==============================
+    MAP_WIDTH: int = 40
+    MAP_HEIGHT: int = 40
+    MAX_STEPS: int = 200
 
-    CELL_SIZE: int = 10
-    P_FOOD: float = 0.05
-    FOOD_ENERGY: int = 40
+    POP_SIZE: int = 50
+    RUNS_PER_GENERATION: int = 10
 
-    VISION_RADIUS: int = 1
-    MEMORY_SIZE: int = 10
-    INITIAL_ENERGY: int = 200
-    MOVE_STAND_RATIO: int = 3
-    NETWORK_TYPE: Union[int, str] = "auto"
+    # ==============================
+    # EVOLUTIONARY ALGORITHM
+    # ==============================
+    MUTATION_RATE: float = 0.04
+    MUTATION_STD: float = 3.0
+    MUTATION_CLIP: float = 10.0
+    ELITISM: float = 0.1
+    SURVIVAL_RATE: float = 0.6
 
-    MUTATION_RATE: float = 0.1       
-    MUTATION_STD: float = 0.05        
-    MUTATION_CLIP: float = 1.0  
-
-    ELITISM: float = 0.05,
-    SURVIVAL_RATE: float = 0.3,
-    POP_SIZE: int = 100
-    N_SIMULATIONS: int = 10
-    MAX_STEPS: int = 100
-
+    # ==============================
+    # VISUALIZATION
+    # ==============================
+    CELL_SIZE: int = 18
     SCREEN_WIDTH: Union[int, str] = "auto"
     SCREEN_HEIGHT: Union[int, str] = "auto"
-    EDGE_SIZE: int = 0
-    INFO_Y: int = 0
-    INFO_X: int = 50
+
     FONDO: Tuple[int, int, int] = (150, 150, 150)
     OBSTACLE_COLOR: Tuple[int, int, int] = (50, 50, 50)
     FOOD_COLOR: Tuple[int, int, int] = (40, 130, 40)
     FONT: str = "Aileron-Regular.otf"
     MAX_FPS: int = 9999
+
+    # ==============================
+    # EXPERIMENT / TEST
+    # ==============================
+    TEST: str = "egg_hunt"
+    NETWORK_TYPE: str = "MLP_with_memory"
+
+    # Specific to "egg_hunt"
+    MIN_DISTANCE_egg: Optional[int] = None
+
+    # ==============================
+    # AGENT BRAINS
+    # ==============================
+
+    # --- MLP with Memory ---
+    MEMORY_SIZE: int = 10
+    HIDDEN_ARCHITECTURE: List[int] = field(default_factory=list)
+    VISION_RADIUS: int = 1
+
+    # --- NEAT ---
+    # (placeholder)
+
+    # --- Simple RNN ---
+    HIDDEN_STATE_SIZE: Optional[int] = None
+
+    # ==============================
+    # DERIVED ATTRIBUTES
+    # ==============================
+    total_cells: int = 0
+    EDGE_SIZE: int = 0
+    INFO_Y: int = 0
+    INFO_X: int = 50
     PAD: int = 3
 
-    total_cells: int = 0
-    MAP_WIDTH: int = 0
-    MAP_HEIGHT: int = 0
-
-
     def finalize(self) -> "_Config":
-        if isinstance(self.FONDO, list): 
+        # Convert colors from list -> tuple if needed
+        if isinstance(self.FONDO, list):
             self.FONDO = tuple(self.FONDO)
-        if isinstance(self.OBSTACLE_COLOR, list): 
+        if isinstance(self.OBSTACLE_COLOR, list):
             self.OBSTACLE_COLOR = tuple(self.OBSTACLE_COLOR)
-        if isinstance(self.FOOD_COLOR, list): 
+        if isinstance(self.FOOD_COLOR, list):
             self.FOOD_COLOR = tuple(self.FOOD_COLOR)
 
+        # Auto screen size from monitor
         if self.SCREEN_WIDTH == "auto" or self.SCREEN_HEIGHT == "auto":
             mon = get_monitors()[0]
             self.SCREEN_WIDTH = mon.width
             self.SCREEN_HEIGHT = mon.height
 
+        # Derived params
         self.EDGE_SIZE = self.SCREEN_WIDTH // 30
         self.PAD = self.VISION_RADIUS
         self.INFO_Y = self.SCREEN_HEIGHT - 31
+        self.total_cells = self.MAP_WIDTH * self.MAP_HEIGHT
 
         return self
 
 
-def load_config(path: str = "config.json") -> _Config:
+def load_config(path: str = "config.yaml") -> _Config:
     with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data = yaml.safe_load(f)  # carga YAML en dict de Python
     return _Config(**data).finalize()
 
 

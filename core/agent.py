@@ -9,7 +9,7 @@ class Individual:
 
     MOVEMENTS =[(-1,0), (0,-1), (0,0), (0,1), (1,0)]
     
-    def __init__(self, color=(0,0,255)):
+    def __init__(self, color=(random.randint(0,255), random.randint(0,255), random.randint(0,255))):
 
         self.alive = 1
         self.color=color
@@ -74,6 +74,7 @@ class Individual:
         def clamp(val):
             return max(0, min(255, val)) 
 
+        dist = 1.7 * 126 * Config.MUTATION_RATE * 5
         r, g, b = self.color
         r_new = clamp(r + random.randint(-10, 10))
         g_new = clamp(g + random.randint(-10, 10))

@@ -6,17 +6,18 @@ from core.config_loader import Config
 
 class MLP_with_memory(nn.Module):
     def __init__(self, input_size=None, output_size=5, vision_radius=Config.VISION_RADIUS,
-                 architecture=[80, 60, 40, 20], memory_size=Config.MEMORY_SIZE):
+                 architecture=[], memory_size=Config.MEMORY_SIZE):
         super().__init__()
-        self.vision_size = 2 * vision_radius + 1
+        self.vision_size_side = 2 * vision_radius + 1
+        self.memory_size = memory_size 
+
         self.output_size = output_size
-        self.memory_size = memory_size
 
-        if input_size is None:
-            input_size = 2 * (self.vision_size ** 2)
-
-        memory_input_size = output_size * memory_size
-        input_size = input_size + memory_input_size
+        if Config.TEST == "egg_hunt":
+            input_size = self.vision_size_side**2 + self.memory_size * output_size + 1
+            #print(f'input size set to {input_size} for egg_hunt test')
+            
+        
 
         if architecture is None:
             architecture = Config.ARCHITECTURE
@@ -52,22 +53,21 @@ class MLP_with_memory(nn.Module):
         self.memory = torch.roll(self.memory, shifts=-1, dims=0)
         self.memory[-1] = one_hot.squeeze(0)  
 
-    def forward(self, terrain_vision, population_vision):
+    def forward(self, *inputs):
 
-        terrain_tensor = torch.from_numpy(terrain_vision).float().view(1, -1)
-        population_tensor = torch.from_numpy(population_vision).float().view(1, -1)
+        tensors = [torch.from_numpy(inp).float().view(1, -1) for inp in inputs]
 
+        memory_tensor = self.memory.flatten().unsqueeze(0)
+        tensors.append(memory_tensor)
 
-        memory_tensor = self.memory.flatten().unsqueeze(0) 
+        combined = torch.cat(tensors, dim=1)
 
-
-        combined = torch.cat([terrain_tensor, population_tensor, memory_tensor], dim=1)
-
-        logits = self.network(combined) 
+        logits = self.network(combined)
 
         self.update_memory(logits)
 
         return logits
+
 
     def mutate(self, mutation_rate=Config.MUTATION_RATE, mutation_std=Config.MUTATION_STD,
                mutation_clip=Config.MUTATION_CLIP):

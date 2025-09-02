@@ -7,7 +7,7 @@ class MapManager:
     @staticmethod
     def generate_terrain(offset_x=0, offset_y=0):
         terrain = np.zeros((Config.MAP_HEIGHT, Config.MAP_WIDTH))
-        scale = 12
+        scale = 8
         octaves = 6
         persistence = 0.5
         lacunarity = 2.0

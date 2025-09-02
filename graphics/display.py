@@ -9,7 +9,7 @@ from core.config_loader import Config
 
 ####################################################################
 monitores = get_monitors()
-pantalla_objetivo = monitores[0] # Primary screen
+pantalla_objetivo = monitores[1] # Primary screen
 x = pantalla_objetivo.x
 y = pantalla_objetivo.y
 os.environ['SDL_VIDEO_WINDOW_POS'] = f"{x},{y}"

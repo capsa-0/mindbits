@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+
 from core.config_loader import Config
 
 class DisplayBorders:
@@ -130,35 +131,39 @@ class UIButton:
 
 
 class SimulationHUD:
-    def __init__(self, pos=(1100, 40), size=(500, 400), font_name="consolas", font_size=16, padding=10, alpha=190):
-        self.x, self.y = pos
-        self.w, self.h = size
-        self.padding = padding
-        self.bg_color = (18, 18, 20)
-        self.border_color = (80, 80, 90)
-        self.text_color = (230, 230, 235)
-        self.accent = (120, 180, 255)
-        self.grid = (60, 60, 70)
+    def __init__(self, size=(500, 400), scale=0.8, font_name="consolas", font_size=16, padding=10, alpha=190):
+        self.scale = scale
 
-        self.chart_h = 180
-        info_h = self.h - self.chart_h - 2 * self.padding  
+        # Tamaños generales escalados
+        self.w, self.h = int(size[0] * scale), int(size[1] * scale)
+        self.padding = int(padding * scale)
+        self.chart_h = int(180 * scale)
+        info_h = self.h - self.chart_h - 2 * self.padding
+
+        # Posición proporcional
+        self.x = int(Config.SCREEN_WIDTH * 0.966) - self.w
+        self.y = int(Config.SCREEN_HEIGHT * 0.058)
+        self.pos = (self.x, self.y)
 
         self.info_panel = pygame.Surface((self.w, info_h))
         self.info_panel.set_alpha(alpha)
 
         self.chart_panel = pygame.Surface((self.w - 2*self.padding, self.chart_h))
         self.chart_panel.set_alpha(alpha)
-        self.chart_rect = self.chart_panel.get_rect(topleft=(self.x + self.padding,
-                                                             self.y + info_h + self.padding))
+        self.chart_rect = self.chart_panel.get_rect(topleft=(self.x + self.padding, self.y + info_h + self.padding))
 
-        try:
-            self.font = pygame.font.SysFont(font_name, font_size)
-            self.font_bold = pygame.font.SysFont(font_name, font_size, bold=True)
-            self.font_small = pygame.font.SysFont(font_name, max(12, font_size - 2))
-        except Exception:
-            self.font = pygame.font.Font(None, font_size)
-            self.font_bold = pygame.font.Font(None, font_size)
-            self.font_small = pygame.font.Font(None, max(12, font_size - 2))
+        # Colores
+        self.bg_color = (18, 18, 20)
+        self.border_color = (80, 80, 90)
+        self.text_color = (230, 230, 235)
+        self.accent = (120, 180, 255)
+        self.grid = (60, 60, 70)
+
+        # Fuentes escaladas
+        font_size_scaled = max(1, int(font_size * scale))
+        self.font = pygame.font.SysFont(font_name, font_size_scaled)
+        self.font_bold = pygame.font.SysFont(font_name, font_size_scaled, bold=True)
+        self.font_small = pygame.font.SysFont(font_name, max(1, font_size_scaled - 2))
 
         self.fitness_history = []
 
@@ -173,18 +178,17 @@ class SimulationHUD:
 
         self.info_panel.fill(self.bg_color)
         self._blit_text("EGG HUNT (STATIC)", (self.padding, self.padding), bold=True, panel=self.info_panel)
-        self._blit_text(f"GEN: {n_gen}", (self.padding, self.padding + 24), panel=self.info_panel)
-        self._blit_text(f"SIM: {n_sim}", (self.padding + 160, self.padding + 24), panel=self.info_panel)
+        self._blit_text(f"GEN: {n_gen}", (self.padding, self.padding + int(24 * self.scale)), panel=self.info_panel)
+        self._blit_text(f"SIM: {n_sim}", (self.padding + int(160 * self.scale), self.padding + int(24 * self.scale)), panel=self.info_panel)
 
-        self._draw_config_block((self.padding, 60), panel=self.info_panel)
+        self._draw_config_block((self.padding, int(60 * self.scale)), panel=self.info_panel)
         surface.blit(self.info_panel, (self.x, self.y))
 
         chart_y = self.y + self.info_panel.get_height() + self.padding
         self.chart_rect.topleft = (self.x + self.padding, chart_y)
         self._draw_chart(surface, self.chart_rect, self.fitness_history)
 
-        pygame.draw.rect(surface, self.border_color, (self.x, self.y, self.w, self.h), 1)
-
+        pygame.draw.rect(surface, self.border_color, (self.x, self.y, self.w, self.h), max(1, int(1 * self.scale)))
 
     def _blit_text(self, text, pos, bold=False, small=False, color=None, panel=None):
         color = color or self.text_color
@@ -193,20 +197,21 @@ class SimulationHUD:
         target = panel if panel else self.info_panel
         target.blit(surf, pos)
 
-
     def _draw_chart(self, surface: pygame.Surface, rect: pygame.Rect, data: list[float]):
         self.chart_panel.fill((28, 28, 32))
 
-        top_pad, bottom_pad = 30, 20
+        top_pad, bottom_pad = int(30 * self.scale), int(20 * self.scale)
         chart_h = rect.h - top_pad - bottom_pad
 
-        pygame.draw.line(self.chart_panel, self.text_color, (40, top_pad), (40, rect.h - bottom_pad), 2) 
-        pygame.draw.line(self.chart_panel, self.text_color, (40, rect.h - bottom_pad), (rect.w, rect.h - bottom_pad), 2)  
+        pygame.draw.line(self.chart_panel, self.text_color, (int(40 * self.scale), top_pad),
+                         (int(40 * self.scale), rect.h - bottom_pad), max(1, int(2 * self.scale)))
+        pygame.draw.line(self.chart_panel, self.text_color, (int(40 * self.scale), rect.h - bottom_pad),
+                         (rect.w, rect.h - bottom_pad), max(1, int(2 * self.scale)))
 
-        self._blit_text("Fitness", (rect.w // 2 - 50, 5), bold=True, panel=self.chart_panel)
+        self._blit_text("Fitness", (rect.w // 2 - int(50 * self.scale), int(5 * self.scale)), bold=True, panel=self.chart_panel)
 
         if len(data) < 2:
-            self._blit_text("Fitness plot (min. 2 generations)", (50, 40),
+            self._blit_text("Fitness plot (min. 2 generations)", (int(50 * self.scale), int(40 * self.scale)),
                             small=True, color=(180, 180, 190), panel=self.chart_panel)
             surface.blit(self.chart_panel, rect.topleft)
             return
@@ -216,29 +221,29 @@ class SimulationHUD:
 
         last_val = data[-1]
         y_last = top_pad + int((vmax - last_val) / rng * chart_h)
-        pygame.draw.line(self.chart_panel, (200, 200, 200), (35, y_last), (40, y_last)) 
-        self._blit_text(f"{last_val:.2f}", (0, y_last - 8), small=True, panel=self.chart_panel)
+        pygame.draw.line(self.chart_panel, (200, 200, 200), (int(35 * self.scale), y_last),
+                         (int(40 * self.scale), y_last))
+        self._blit_text(f"{last_val:.2f}", (0, y_last - int(8 * self.scale)), small=True, panel=self.chart_panel)
 
-        step_x = (rect.w - 50) / max(1, len(data) - 1)
+        step_x = (rect.w - int(50 * self.scale)) / max(1, len(data) - 1)
         points = []
         for i, v in enumerate(data):
-            x = 40 + int(i * step_x)
+            x = int(40 * self.scale + i * step_x)
             y = top_pad + int((vmax - v) / rng * chart_h)
             points.append((x, y))
-        pygame.draw.lines(self.chart_panel, self.accent, False, points, 2)
-
+        pygame.draw.lines(self.chart_panel, self.accent, False, points, max(1, int(2 * self.scale)))
 
         max_ticks = 5
         n_points = len(data)
         tick_positions = np.linspace(0, n_points - 1, min(max_ticks, n_points), dtype=int)
 
         for i in tick_positions:
-            x = 40 + int(i * step_x)
-            pygame.draw.line(self.chart_panel, (80, 80, 90), (x, rect.h - bottom_pad), (x, rect.h - bottom_pad + 5))
-            self._blit_text(f"{i}", (x - 8, rect.h - bottom_pad + 8), small=True, panel=self.chart_panel)
+            x = int(40 * self.scale + i * step_x)
+            pygame.draw.line(self.chart_panel, (80, 80, 90), (x, rect.h - bottom_pad), (x, rect.h - bottom_pad + int(5 * self.scale)))
+            self._blit_text(f"{i}", (x - int(8 * self.scale), rect.h - bottom_pad + int(8 * self.scale)),
+                            small=True, panel=self.chart_panel)
 
         surface.blit(self.chart_panel, rect.topleft)
-
 
     def _draw_config_block(self, origin: tuple[int, int], panel=None):
         panel = panel or self.info_panel
@@ -254,8 +259,8 @@ class SimulationHUD:
                 "MAP_WIDTH", "MAP_HEIGHT"
         ]
 
-        y = oy + 22
-        col2_x = ox + 260
+        y = oy + int(22 * self.scale)
+        col2_x = ox + int(260 * self.scale)
         for idx, k in enumerate(keys):
             exists = hasattr(Config, k)
             name_text = f"{k}:"
@@ -263,13 +268,14 @@ class SimulationHUD:
 
             x = ox if idx < (len(keys) // 2 + len(keys) % 2) else col2_x
             if idx == (len(keys) // 2 + len(keys) % 2):
-                y = oy + 22
+                y = oy + int(22 * self.scale)
 
             name_surf = self.font_small.render(name_text, True, (190, 190, 200))
             panel.blit(name_surf, (x, y))
 
-            val_x = x + name_surf.get_width() + 10
+            val_x = x + name_surf.get_width() + int(10 * self.scale)
             val_surf = self.font_small.render(str(val_text), True, self.text_color)
             panel.blit(val_surf, (val_x, y))
 
-            y += 18
+            y += int(18 * self.scale)
+
