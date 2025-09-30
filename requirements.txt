@@ -1,6 +1,0 @@
-pygame
-numpy
-torch
-screeninfo
-noise
-

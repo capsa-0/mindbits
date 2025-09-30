@@ -1,0 +1,36 @@
+name: 'Moths'
+description: 'The objective of this population is to follow a moving target.'
+author: 'CAPSA'
+total_size: 3
+batchs:
+  batch_1:
+    amount: 2
+    agent_config:
+      color: 'random'
+      brain_config:
+        brain_class: 'BasicBrain'
+        inputs: 
+          agent_view: [0] 
+          agent_attributes: ['position']
+
+        outputs: [[-1, 1], [0, 1], [1, 1], [-1, 0], [1, 0], [-1, -1], [0, -1], [1, -1]]
+
+        hidden_layers_sizes: [10, 5]
+        activation: 'relu'
+        vision_range: 1
+
+  batch_2:
+    amount: 1
+    agent_config:
+      color: [255, 255, 255]
+      brain_config:
+        brain_class: 'BasicBrain'
+        inputs: 
+          agent_view: [0] 
+          agent_attributes: []
+          
+        outputs: [[1, 0]]
+
+        hidden_layers_sizes: [10, 5]
+        activation: 'relu'
+        vision_range: 1

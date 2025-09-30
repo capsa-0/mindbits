@@ -1,0 +1,4 @@
+inputs:
+  agent_attributes_sizes:
+    energy: 1
+    position: 2

@@ -1,0 +1,11 @@
+{color: [166, 209, 71], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 1}
+{color: [110, 26, 82], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 2}
+{color: [255, 255, 255], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: []}, outputs: [[1, 0]], hidden_layers_sizes: [10, 5],
+    activation: relu, vision_range: 1}, batch: batch_2, id: 3}

@@ -1,0 +1,120 @@
+{color: [173, 106, 120], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 1}
+{color: [37, 96, 207], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 2}
+{color: [195, 2, 76], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 3}
+{color: [245, 138, 83], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 4}
+{color: [98, 198, 204], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 5}
+{color: [195, 18, 12], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 6}
+{color: [96, 4, 17], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 7}
+{color: [114, 199, 131], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 8}
+{color: [170, 233, 60], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 9}
+{color: [9, 62, 95], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 10}
+{color: [236, 103, 135], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 11}
+{color: [38, 174, 4], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 12}
+{color: [240, 171, 109], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 13}
+{color: [161, 0, 144], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 14}
+{color: [31, 132, 170], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 15}
+{color: [29, 189, 134], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 16}
+{color: [240, 40, 255], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 17}
+{color: [88, 154, 165], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 18}
+{color: [72, 169, 129], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 19}
+{color: [74, 197, 166], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 20}
+{color: [206, 3, 98], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 21}
+{color: [70, 132, 92], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 22}
+{color: [225, 115, 169], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 23}
+{color: [33, 229, 113], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 24}
+{color: [187, 132, 218], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 25}
+{color: [117, 223, 59], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 26}
+{color: [100, 157, 232], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 27}
+{color: [96, 120, 114], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 28}
+{color: [164, 246, 186], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 29}
+{color: [214, 58, 55], brain_config: {brain_class: BasicBrain, inputs: {agent_view: [
+        0], agent_attributes: [position]}, outputs: [[-1, 1], [0, 1], [1, 1], [-1,
+        0], [1, 0], [-1, -1], [0, -1], [1, -1]], hidden_layers_sizes: [10, 5], activation: relu,
+    vision_range: 1}, batch: batch_1, id: 30}

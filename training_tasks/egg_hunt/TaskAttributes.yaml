@@ -1,0 +1,10 @@
+objects: ['void', 'agent', 'egg', 'start'] # minimal set of objects in the map
+      
+parameters:
+  egg_mode: # static, dinamic
+  egg_position: # if egg-mode is static, position of the egg: (int, int)
+  min_distance: # minimum distance between egg and agent start position: int
+  eggs_amount: # number of eggs in the map: int
+  eggs_positions: # if egg-mode is static, list of egg positions: [(int, int), (int, int), ...]
+  start_mode: # static, dinamic
+  start_position: # if start-mode is static, position of the agent start: (int, int)
